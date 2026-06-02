@@ -1,5 +1,5 @@
 import logging
-from pyrogram import Client, filters
+from pyrogram import Client, enums, filters
 from pyrogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 
 from bot import database as db
@@ -31,7 +31,7 @@ async def handle_file_download(client: Client, message_or_query, unique_code: st
 
     file_record = await db.get_file_by_code(unique_code)
     if not file_record:
-        await reply_func("❌ <b>File not found.</b> The link may be invalid or the file was deleted.", parse_mode="html")
+        await reply_func("❌ <b>File not found.</b> The link may be invalid or the file was deleted.", parse_mode=enums.ParseMode.HTML)
         return
 
     try:
@@ -50,7 +50,7 @@ async def handle_file_download(client: Client, message_or_query, unique_code: st
                 f"📦 Size: {format_file_size(file_size)}\n"
                 f"⬇️ Downloads: {file_record['download_count'] + 1}"
             ),
-            parse_mode="html"
+            parse_mode=enums.ParseMode.HTML
         )
         await status.delete()
         logger.info(f"User {user.id} downloaded file: {file_name} ({unique_code})")
@@ -58,7 +58,7 @@ async def handle_file_download(client: Client, message_or_query, unique_code: st
     except Exception as e:
         logger.error(f"Download error for {unique_code}: {e}")
         try:
-            await status.edit_text("❌ <b>Download failed.</b> Please try again.", parse_mode="html")
+            await status.edit_text("❌ <b>Download failed.</b> Please try again.", parse_mode=enums.ParseMode.HTML)
         except Exception:
             pass
 
@@ -77,7 +77,7 @@ def register_download_handlers(app: Client):
             await query.message.edit_text(
                 access_denied,
                 reply_markup=force_join_keyboard(channels),
-                parse_mode="html"
+                parse_mode=enums.ParseMode.HTML
             )
             return
 
@@ -105,7 +105,7 @@ def register_download_handlers(app: Client):
             f"<b>Uploaded:</b> {file_record['upload_date'].strftime('%Y-%m-%d %H:%M')}\n\n"
             f"🔗 <b>Link:</b>\n<code>{link}</code>",
             reply_markup=file_info_keyboard(unique_code, is_owner),
-            parse_mode="html"
+            parse_mode=enums.ParseMode.HTML
         )
 
     @app.on_callback_query(filters.regex(r"^del_(.+)$"))
@@ -126,5 +126,5 @@ def register_download_handlers(app: Client):
         await query.message.edit_text(
             "✅ <b>File deleted successfully.</b>",
             reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🏠 Home", callback_data="home")]]),
-            parse_mode="html"
+            parse_mode=enums.ParseMode.HTML
         )

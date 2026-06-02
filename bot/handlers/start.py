@@ -1,5 +1,5 @@
 import logging
-from pyrogram import Client, filters
+from pyrogram import Client, enums, filters
 from pyrogram.types import Message, CallbackQuery
 
 from bot import database as db
@@ -34,19 +34,19 @@ async def show_home_menu(client: Client, message_or_query, welcome_text: str = N
             await message_or_query.message.edit_text(
                 welcome_text,
                 reply_markup=home_menu(),
-                parse_mode="html"
+                parse_mode=enums.ParseMode.HTML
             )
         except Exception:
             await message_or_query.message.reply_text(
                 welcome_text,
                 reply_markup=home_menu(),
-                parse_mode="html"
+                parse_mode=enums.ParseMode.HTML
             )
     else:
         await message_or_query.reply_text(
             welcome_text,
             reply_markup=home_menu(),
-            parse_mode="html"
+            parse_mode=enums.ParseMode.HTML
         )
 
 
@@ -82,7 +82,7 @@ def register_start_handlers(app: Client):
                                 f"🎉 <b>New Referral!</b>\n\n"
                                 f"<b>{user.first_name}</b> joined using your referral link!\n"
                                 f"Your referral count has increased.",
-                                parse_mode="html"
+                                parse_mode=enums.ParseMode.HTML
                             )
                         except Exception:
                             pass
@@ -98,7 +98,7 @@ def register_start_handlers(app: Client):
                 sent = await message.reply_text(
                     access_denied_text,
                     reply_markup=force_join_keyboard(channels),
-                    parse_mode="html"
+                    parse_mode=enums.ParseMode.HTML
                 )
                 # Store the file code to redirect after join
                 return
@@ -113,7 +113,7 @@ def register_start_handlers(app: Client):
             await message.reply_text(
                 access_denied_text,
                 reply_markup=force_join_keyboard(channels),
-                parse_mode="html"
+                parse_mode=enums.ParseMode.HTML
             )
             return
 
@@ -127,14 +127,14 @@ def register_start_handlers(app: Client):
         if joined:
             verify_success = await db.get_bot_text("verify_success")
             try:
-                await query.message.edit_text(verify_success, parse_mode="html")
+                await query.message.edit_text(verify_success, parse_mode=enums.ParseMode.HTML)
             except Exception:
                 pass
             welcome_text = await db.get_bot_text("welcome_message")
             await query.message.reply_text(
                 welcome_text,
                 reply_markup=home_menu(),
-                parse_mode="html"
+                parse_mode=enums.ParseMode.HTML
             )
         else:
             verify_failed = await db.get_bot_text("verify_failed")
@@ -144,7 +144,7 @@ def register_start_handlers(app: Client):
                 await query.message.edit_text(
                     access_denied_text,
                     reply_markup=force_join_keyboard(channels),
-                    parse_mode="html"
+                    parse_mode=enums.ParseMode.HTML
                 )
             except Exception:
                 pass
@@ -161,7 +161,7 @@ def register_start_handlers(app: Client):
                 await query.message.edit_text(
                     access_denied_text,
                     reply_markup=force_join_keyboard(channels),
-                    parse_mode="html"
+                    parse_mode=enums.ParseMode.HTML
                 )
             except Exception:
                 pass
@@ -174,7 +174,7 @@ def register_start_handlers(app: Client):
             "📤 <b>Upload a File</b>\n\nSend me any file, photo, video, audio, or document to store it.\n\n"
             "Supported: APK, ZIP, PDF, Video, Audio, Images, Documents",
             reply_markup=back_to_home(),
-            parse_mode="html"
+            parse_mode=enums.ParseMode.HTML
         )
 
     @app.on_callback_query(filters.regex("^support$"))
@@ -183,7 +183,7 @@ def register_start_handlers(app: Client):
             "🆘 <b>Support</b>\n\nFor help and support, please contact the admin.\n\n"
             "You can also use /help for a list of commands.",
             reply_markup=back_to_home(),
-            parse_mode="html"
+            parse_mode=enums.ParseMode.HTML
         )
 
     @app.on_callback_query(filters.regex("^premium$"))
@@ -192,7 +192,7 @@ def register_start_handlers(app: Client):
             "⭐ <b>Premium</b>\n\nPremium features coming soon!\n\n"
             "Stay tuned for updates.",
             reply_markup=back_to_home(),
-            parse_mode="html"
+            parse_mode=enums.ParseMode.HTML
         )
 
     @app.on_callback_query(filters.regex("^help$"))
@@ -210,7 +210,7 @@ def register_start_handlers(app: Client):
             "<b>Deep Link Format:</b>\n"
             "<code>https://t.me/BOT?start=file_CODE</code>",
             reply_markup=back_to_home(),
-            parse_mode="html"
+            parse_mode=enums.ParseMode.HTML
         )
 
     @app.on_message(filters.command("help") & filters.private)
@@ -224,5 +224,5 @@ def register_start_handlers(app: Client):
             "<b>Commands:</b>\n"
             "/start — Start the bot\n"
             "/help — Show this message",
-            parse_mode="html"
+            parse_mode=enums.ParseMode.HTML
         )

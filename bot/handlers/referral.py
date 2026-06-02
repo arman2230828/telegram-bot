@@ -1,5 +1,5 @@
 import logging
-from pyrogram import Client, filters
+from pyrogram import Client, enums, filters
 from pyrogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 
 from bot import database as db
@@ -26,7 +26,7 @@ def register_referral_handlers(app: Client):
             f"👤 <b>Total Referrals:</b> {referral_count}\n\n"
             f"🔗 <b>Your Referral Link:</b>\n<code>{ref_link}</code>\n\n"
             f"Share your link to invite friends. Each person who joins counts as a referral!",
-            parse_mode="html",
+            parse_mode=enums.ParseMode.HTML,
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("📤 Share Referral Link", url=share_link)],
                 [InlineKeyboardButton("🏠 Home", callback_data="home")],

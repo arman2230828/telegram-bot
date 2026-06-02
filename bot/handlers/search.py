@@ -1,5 +1,5 @@
 import logging
-from pyrogram import Client, filters
+from pyrogram import Client, enums, filters
 from pyrogram.types import Message, CallbackQuery, ForceReply
 
 from bot import database as db
@@ -19,7 +19,7 @@ def register_search_handlers(app: Client):
         await query.message.edit_text(
             "🔍 <b>Search Files</b>\n\nSend me the filename or keyword to search for:",
             reply_markup=back_to_home(),
-            parse_mode="html"
+            parse_mode=enums.ParseMode.HTML
         )
 
     @app.on_message(filters.private & filters.text & ~filters.command(["start", "help", "admin", "stats", "broadcast", "ban", "unban", "addadmin", "removeadmin", "addchannel", "removechannel", "deletefile"]))
@@ -61,10 +61,10 @@ async def perform_search(client, message_or_query, query_text: str, offset: int,
     if not results:
         text = f"🔍 No files found for: <b>{query_text}</b>"
         if isinstance(message_or_query, CallbackQuery) and edit:
-            await message_or_query.message.edit_text(text, reply_markup=back_to_home(), parse_mode="html")
+            await message_or_query.message.edit_text(text, reply_markup=back_to_home(), parse_mode=enums.ParseMode.HTML)
         else:
             target = message_or_query.message if isinstance(message_or_query, CallbackQuery) else message_or_query
-            await target.reply_text(text, reply_markup=back_to_home(), parse_mode="html")
+            await target.reply_text(text, reply_markup=back_to_home(), parse_mode=enums.ParseMode.HTML)
         return
 
     text = (
@@ -76,7 +76,7 @@ async def perform_search(client, message_or_query, query_text: str, offset: int,
     kb = search_results_keyboard(results, query_text, offset, total, per_page)
 
     if isinstance(message_or_query, CallbackQuery) and edit:
-        await message_or_query.message.edit_text(text, reply_markup=kb, parse_mode="html")
+        await message_or_query.message.edit_text(text, reply_markup=kb, parse_mode=enums.ParseMode.HTML)
     else:
         target = message_or_query.message if isinstance(message_or_query, CallbackQuery) else message_or_query
-        await target.reply_text(text, reply_markup=kb, parse_mode="html")
+        await target.reply_text(text, reply_markup=kb, parse_mode=enums.ParseMode.HTML)

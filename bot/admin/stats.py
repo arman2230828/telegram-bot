@@ -1,5 +1,5 @@
 import logging
-from pyrogram import Client, filters
+from pyrogram import Client, enums, filters
 from pyrogram.types import Message
 
 from bot import database as db
@@ -22,7 +22,7 @@ def register_stats_handlers(app: Client):
             f"Total: <b>{total}</b>\n"
             f"Banned: <b>{banned}</b>\n"
             f"Premium: <b>{premium}</b>",
-            parse_mode="html"
+            parse_mode=enums.ParseMode.HTML
         )
 
     @app.on_message(filters.command("files") & filters.private)
@@ -37,5 +37,5 @@ def register_stats_handlers(app: Client):
             f"📁 <b>File Statistics</b>\n\n"
             f"Total Files: <b>{total}</b>\n"
             f"Total Size: <b>{format_file_size(total_size)}</b>",
-            parse_mode="html"
+            parse_mode=enums.ParseMode.HTML
         )

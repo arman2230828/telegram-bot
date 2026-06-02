@@ -1,5 +1,5 @@
 import logging
-from pyrogram import Client, filters
+from pyrogram import Client, enums, filters
 from pyrogram.types import CallbackQuery
 
 from bot import database as db
@@ -29,7 +29,7 @@ def register_myfiles_handlers(app: Client):
             await query.message.edit_text(
                 "📁 <b>My Files</b>\n\nYou haven't uploaded any files yet.\n\nSend a file to get started!",
                 reply_markup=back_to_home(),
-                parse_mode="html"
+                parse_mode=enums.ParseMode.HTML
             )
             return
 
@@ -42,5 +42,5 @@ def register_myfiles_handlers(app: Client):
         await query.message.edit_text(
             text,
             reply_markup=my_files_keyboard(files, offset, total, PER_PAGE),
-            parse_mode="html"
+            parse_mode=enums.ParseMode.HTML
         )

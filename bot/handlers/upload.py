@@ -1,5 +1,5 @@
 import logging
-from pyrogram import Client, filters
+from pyrogram import Client, enums, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 
 from bot import database as db
@@ -70,7 +70,7 @@ def register_upload_handlers(app: Client):
             await message.reply_text(
                 access_denied_text,
                 reply_markup=force_join_keyboard(channels),
-                parse_mode="html"
+                parse_mode=enums.ParseMode.HTML
             )
             return
 
@@ -97,7 +97,7 @@ def register_upload_handlers(app: Client):
             await message.reply_text(
                 f"⚠️ <b>File already stored!</b>\n\n"
                 f"🔗 <b>Existing Link:</b>\n<code>{link}</code>",
-                parse_mode="html",
+                parse_mode=enums.ParseMode.HTML,
                 reply_markup=InlineKeyboardMarkup([
                     [InlineKeyboardButton("🔗 Copy Link", url=link)],
                     [InlineKeyboardButton("🏠 Home", callback_data="home")]
@@ -150,7 +150,7 @@ def register_upload_handlers(app: Client):
                 f"📦 <b>File Size:</b> {format_file_size(file_size)}\n\n"
                 f"🔗 <b>Permanent Link:</b>\n<code>{link}</code>\n\n"
                 f"Share this link with anyone.",
-                parse_mode="html",
+                parse_mode=enums.ParseMode.HTML,
                 reply_markup=InlineKeyboardMarkup([
                     [InlineKeyboardButton("🔗 Share Link", url=f"https://t.me/share/url?url={link}")],
                     [InlineKeyboardButton("🏠 Home", callback_data="home")]
@@ -162,5 +162,5 @@ def register_upload_handlers(app: Client):
             logger.error(f"Upload error for user {user.id}: {e}")
             await status_msg.edit_text(
                 "❌ <b>Upload failed.</b> Please try again.",
-                parse_mode="html"
+                parse_mode=enums.ParseMode.HTML
             )
