@@ -29,9 +29,20 @@ logger = logging.getLogger(__name__)
 
 async def set_bot_username(app: Client):
     from bot import config
+    from bot.config import STORAGE_CHANNEL_ID
     me = await app.get_me()
     config.BOT_USERNAME = me.username or ""
     logger.info(f"Bot started: @{config.BOT_USERNAME} (ID: {me.id})")
+
+    # Resolve storage channel peer into Pyrogram's cache so forwards work
+    try:
+        chat = await app.get_chat(STORAGE_CHANNEL_ID)
+        logger.info(f"Storage channel resolved: {chat.title} ({chat.id})")
+    except Exception as e:
+        logger.error(
+            f"⚠️  Could not resolve storage channel {STORAGE_CHANNEL_ID}: {e}\n"
+            "Make sure the bot is an ADMIN in the storage channel."
+        )
 
 
 async def main():

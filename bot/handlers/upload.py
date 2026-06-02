@@ -108,27 +108,27 @@ def register_upload_handlers(app: Client):
         status_msg = await message.reply_text("⏳ Storing your file...")
 
         try:
-            # Forward to storage channel
-            forwarded = await message.forward(STORAGE_CHANNEL_ID)
+            # Copy message to storage channel (no "Forwarded from" tag, works reliably)
+            copied = await message.copy(STORAGE_CHANNEL_ID)
             stored_file_id = None
 
-            if forwarded.document:
-                stored_file_id = forwarded.document.file_id
-            elif forwarded.video:
-                stored_file_id = forwarded.video.file_id
-            elif forwarded.audio:
-                stored_file_id = forwarded.audio.file_id
-            elif forwarded.photo:
-                photos = forwarded.photo
+            if copied.document:
+                stored_file_id = copied.document.file_id
+            elif copied.video:
+                stored_file_id = copied.video.file_id
+            elif copied.audio:
+                stored_file_id = copied.audio.file_id
+            elif copied.photo:
+                photos = copied.photo
                 stored_file_id = photos[-1].file_id if isinstance(photos, list) else photos.file_id
-            elif forwarded.voice:
-                stored_file_id = forwarded.voice.file_id
-            elif forwarded.video_note:
-                stored_file_id = forwarded.video_note.file_id
-            elif forwarded.animation:
-                stored_file_id = forwarded.animation.file_id
-            elif forwarded.sticker:
-                stored_file_id = forwarded.sticker.file_id
+            elif copied.voice:
+                stored_file_id = copied.voice.file_id
+            elif copied.video_note:
+                stored_file_id = copied.video_note.file_id
+            elif copied.animation:
+                stored_file_id = copied.animation.file_id
+            elif copied.sticker:
+                stored_file_id = copied.sticker.file_id
             else:
                 stored_file_id = file_id
 
