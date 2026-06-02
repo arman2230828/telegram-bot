@@ -9,11 +9,13 @@ logger = logging.getLogger(__name__)
 
 
 async def send_file_by_type(client: Client, user_id: int, file_record: dict):
-    """Send file using the correct Pyrogram method based on stored file_type."""
+    """Send file using the correct Pyrogram method based on stored file_type.
+    Falls back through all media types automatically if the stored type is wrong."""
     file_id = file_record["file_id"]
     file_name = file_record["file_name"]
     file_size = file_record["file_size"]
     file_type = file_record.get("file_type") or "document"
+    unique_code = file_record.get("unique_code")
     download_count = file_record["download_count"] + 1
 
     caption = (
@@ -22,23 +24,36 @@ async def send_file_by_type(client: Client, user_id: int, file_record: dict):
         f"⬇️ Downloads: {download_count}"
     )
 
-    if file_type == "photo":
-        await client.send_photo(user_id, photo=file_id, caption=caption, parse_mode=enums.ParseMode.HTML)
-    elif file_type == "video":
-        await client.send_video(user_id, video=file_id, caption=caption, parse_mode=enums.ParseMode.HTML)
-    elif file_type == "audio":
-        await client.send_audio(user_id, audio=file_id, caption=caption, parse_mode=enums.ParseMode.HTML)
-    elif file_type == "voice":
-        await client.send_voice(user_id, voice=file_id)
-    elif file_type == "video_note":
-        await client.send_video_note(user_id, video_note=file_id)
-    elif file_type == "animation":
-        await client.send_animation(user_id, animation=file_id, caption=caption, parse_mode=enums.ParseMode.HTML)
-    elif file_type == "sticker":
-        await client.send_sticker(user_id, sticker=file_id)
-    else:
-        # Default: send as document (works for APK, ZIP, PDF, etc.)
-        await client.send_document(user_id, document=file_id, caption=caption, parse_mode=enums.ParseMode.HTML)
+    # Map of type → send coroutine factory
+    senders = {
+        "photo":      lambda: client.send_photo(user_id, photo=file_id, caption=caption, parse_mode=enums.ParseMode.HTML),
+        "video":      lambda: client.send_video(user_id, video=file_id, caption=caption, parse_mode=enums.ParseMode.HTML),
+        "audio":      lambda: client.send_audio(user_id, audio=file_id, caption=caption, parse_mode=enums.ParseMode.HTML),
+        "voice":      lambda: client.send_voice(user_id, voice=file_id),
+        "video_note": lambda: client.send_video_note(user_id, video_note=file_id),
+        "animation":  lambda: client.send_animation(user_id, animation=file_id, caption=caption, parse_mode=enums.ParseMode.HTML),
+        "sticker":    lambda: client.send_sticker(user_id, sticker=file_id),
+        "document":   lambda: client.send_document(user_id, document=file_id, caption=caption, parse_mode=enums.ParseMode.HTML),
+    }
+
+    # Try stored type first, then fall back through all others
+    order = [file_type] + [t for t in senders if t != file_type]
+    last_err = None
+    for t in order:
+        try:
+            await senders[t]()
+            # If the type we used differs from stored, auto-correct it in DB
+            if t != file_type and unique_code:
+                pool = await db.get_pool()
+                await pool.execute("UPDATE files SET file_type = $1 WHERE unique_code = $2", t, unique_code)
+                logger.info(f"Auto-corrected file_type {file_type!r} → {t!r} for {unique_code}")
+            return
+        except Exception as e:
+            last_err = e
+            if "Expected" in str(e) and "got" in str(e):
+                continue   # wrong type — try next
+            raise          # real error — bubble up
+    raise last_err
 
 
 async def handle_file_download(client: Client, message_or_query, unique_code: str):

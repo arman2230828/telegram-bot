@@ -108,29 +108,35 @@ def register_upload_handlers(app: Client):
         status_msg = await message.reply_text("⏳ Storing your file...")
 
         try:
-            # Copy message to storage channel (no "Forwarded from" tag, works reliably)
-            copied = await message.copy(STORAGE_CHANNEL_ID)
-            stored_file_id = None
-
-            if copied.document:
-                stored_file_id = copied.document.file_id
-            elif copied.video:
-                stored_file_id = copied.video.file_id
-            elif copied.audio:
-                stored_file_id = copied.audio.file_id
-            elif copied.photo:
-                photos = copied.photo
-                stored_file_id = photos[-1].file_id if isinstance(photos, list) else photos.file_id
-            elif copied.voice:
-                stored_file_id = copied.voice.file_id
-            elif copied.video_note:
-                stored_file_id = copied.video_note.file_id
-            elif copied.animation:
-                stored_file_id = copied.animation.file_id
-            elif copied.sticker:
-                stored_file_id = copied.sticker.file_id
-            else:
-                stored_file_id = file_id
+            # Try to copy to storage channel for redundancy.
+            # If that fails (peer not cached yet), fall back to original file_id —
+            # bot-received file_ids are permanent for the same bot token.
+            stored_file_id = file_id
+            try:
+                copied = await message.copy(STORAGE_CHANNEL_ID)
+                channel_file_id = None
+                if copied.document:
+                    channel_file_id = copied.document.file_id
+                elif copied.video:
+                    channel_file_id = copied.video.file_id
+                elif copied.audio:
+                    channel_file_id = copied.audio.file_id
+                elif copied.photo:
+                    photos = copied.photo
+                    channel_file_id = photos[-1].file_id if isinstance(photos, list) else photos.file_id
+                elif copied.voice:
+                    channel_file_id = copied.voice.file_id
+                elif copied.video_note:
+                    channel_file_id = copied.video_note.file_id
+                elif copied.animation:
+                    channel_file_id = copied.animation.file_id
+                elif copied.sticker:
+                    channel_file_id = copied.sticker.file_id
+                if channel_file_id:
+                    stored_file_id = channel_file_id
+                    logger.info(f"File backed up to storage channel for user {user.id}")
+            except Exception as copy_err:
+                logger.warning(f"Storage channel copy failed, using original file_id: {copy_err}")
 
             # Generate unique code
             unique_code = generate_unique_code()

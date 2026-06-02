@@ -34,14 +34,15 @@ async def set_bot_username(app: Client):
     config.BOT_USERNAME = me.username or ""
     logger.info(f"Bot started: @{config.BOT_USERNAME} (ID: {me.id})")
 
-    # Resolve storage channel peer into Pyrogram's cache so forwards work
+    # Try to resolve storage channel peer (best-effort — uploads work even if this fails)
     try:
         chat = await app.get_chat(STORAGE_CHANNEL_ID)
-        logger.info(f"Storage channel resolved: {chat.title} ({chat.id})")
+        logger.info(f"✅ Storage channel resolved: {chat.title} ({chat.id})")
     except Exception as e:
-        logger.error(
-            f"⚠️  Could not resolve storage channel {STORAGE_CHANNEL_ID}: {e}\n"
-            "Make sure the bot is an ADMIN in the storage channel."
+        logger.warning(
+            f"Storage channel peer not cached yet ({e}). "
+            "Uploads will still work using original file_ids. "
+            "Channel backup will activate after first interaction."
         )
 
 
