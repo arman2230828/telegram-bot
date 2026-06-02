@@ -1,0 +1,515 @@
+Build a complete production-ready Telegram File Storage Bot named "Get Free Storage" using Python 3.12+, Pyrogram, TgCrypto, and MySQL.
+
+BOT DETAILS
+
+Bot Name:
+Get Free Storage
+
+Force Join Channel:
+https://t.me/+lgL_8xpBRQ04ZmI1
+
+OBJECTIVE
+
+Create a professional Telegram cloud storage bot similar to FreeStorageBot where users can upload APKs, ZIP files, PDFs, Videos, Audios, Images, Documents, and other Telegram-supported files.
+
+Files must be stored inside a private Telegram storage channel while only metadata and file IDs are stored in MySQL.
+
+The bot should generate permanent shareable download links and support thousands of users efficiently.
+
+TECH STACK
+
+- Python 3.12+
+- Pyrogram
+- TgCrypto
+- MySQL
+- Async Programming
+- Modular Architecture
+- Environment Variables
+- Logging System
+
+ENVIRONMENT VARIABLES
+
+API_ID=
+API_HASH=
+BOT_TOKEN=
+DATABASE_URL=
+OWNER_ID=
+STORAGE_CHANNEL_ID=
+
+DATABASE TABLES
+
+users
+
+- user_id
+- username
+- first_name
+- join_date
+- total_uploads
+- referral_count
+- total_downloads
+- is_banned
+- is_premium
+
+files
+
+- id
+- unique_code
+- file_name
+- file_id
+- file_size
+- uploader_id
+- upload_date
+- download_count
+
+referrals
+
+- id
+- referrer_id
+- referred_id
+- join_date
+
+admins
+
+- admin_id
+- added_date
+
+force_join_channels
+
+- channel_id
+- channel_username
+
+USER FLOW
+
+1. User starts bot.
+2. Force Join verification runs.
+3. User joins required channel.
+4. Home menu appears.
+5. User uploads file.
+6. Bot forwards file to private storage channel.
+7. Bot saves file metadata in MySQL.
+8. Bot generates unique file code.
+9. Bot creates permanent download link.
+10. User receives shareable link.
+
+DOWNLOAD FLOW
+
+1. User opens deep link.
+2. Bot checks force join.
+3. Bot retrieves file from database.
+4. Bot increases download counter.
+5. Bot sends file using Telegram file_id.
+6. User receives file instantly.
+
+DEEP LINK FORMAT
+
+https://t.me/BOT_USERNAME?start=file_UNIQUECODE
+
+Example
+
+https://t.me/GetFreeStorageBot?start=file_22370
+
+WELCOME MESSAGE
+
+Welcome to Get Free Storage!
+
+Store your files safely on Telegram.
+
+Supported Files:
+
+- APK
+- ZIP
+- PDF
+- Video
+- Audio
+- Images
+- Documents
+
+Features:
+
+- Permanent Storage
+- Fast Downloads
+- Secure Links
+- Referral Rewards
+- Unlimited Sharing
+
+Upload a file to begin.
+
+HOME MENU BUTTONS
+
+- Upload File
+- My Files
+- Search Files
+- Referral
+- Premium
+- Support
+- Help
+
+UPLOAD SUCCESS MESSAGE
+
+File Stored Successfully
+
+File Name:
+{filename}
+
+File Size:
+{filesize}
+
+Permanent Link:
+{link}
+
+Share this link with anyone.
+
+FILE SEARCH SYSTEM
+
+- Search by file name.
+- Partial matching.
+- Fast indexed search.
+- Pagination support.
+- Inline download buttons.
+
+MY FILES SECTION
+
+- User uploaded files list.
+- Total uploads.
+- Download statistics.
+- File management options.
+
+FORCE JOIN SYSTEM
+
+- Users must join required channels.
+- Join buttons displayed automatically.
+- Verify button included.
+- Access denied until all channels are joined.
+- Admin can add/remove channels.
+
+REFERRAL SYSTEM
+
+Referral Link Format:
+
+https://t.me/BOT_USERNAME?start=ref_USERID
+
+Features:
+
+- Referral count.
+- Referral earnings.
+- Self-referral protection.
+- Duplicate referral protection.
+- Referral dashboard.
+
+REFERRAL PAGE
+
+Total Referrals:
+X
+
+Total Rewards:
+Y
+
+Your Referral Link:
+{link}
+
+ADMIN PANEL
+
+Commands
+
+/start
+/stats
+/users
+/files
+/broadcast
+/ban
+/unban
+/deletefile
+/addadmin
+/removeadmin
+/addchannel
+/removechannel
+/reload
+
+ADMIN FEATURES
+
+- Total users
+- Total files
+- Total downloads
+- Daily uploads
+- Daily joins
+- Broadcast messages
+- Manage admins
+- Manage channels
+- Delete files
+- Ban users
+- Unban users
+
+STATISTICS PANEL
+
+Show:
+
+- Total Users
+- Total Files
+- Total Uploads
+- Total Downloads
+- Premium Users
+- Active Users
+
+SECURITY FEATURES
+
+- Rate Limiting
+- Flood Protection
+- SQL Injection Protection
+- Duplicate File Detection
+- User Ban System
+- Error Logging
+- Exception Handling
+
+PERFORMANCE FEATURES
+
+- Async handlers
+- Optimized database queries
+- MySQL indexing
+- Scalable architecture
+- Support for 100,000+ users
+- Support for millions of file records
+
+UI REQUIREMENTS
+- Modern Telegram UI
+- Inline keyboards
+- Clean navigation
+- Professional messages
+- Fast response time
+- User-friendly design
+
+PROJECT STRUCTURE
+
+bot/
+├── main.py
+├── config.py
+├── database.py
+├── requirements.txt
+├── .env.example
+├── handlers/
+│   ├── start.py
+│   ├── upload.py
+│   ├── download.py
+│   ├── search.py
+│   └── referral.py
+├── admin/
+│   ├── admin.py
+│   └── stats.py
+├── keyboards/
+├── utils/
+├── logs/
+└── README.md
+
+REQUIREMENTS.TXT
+
+pyrogram
+tgcrypto
+mysql-connector-python
+python-dotenv
+aiofiles
+
+DELIVERABLES
+
+Generate:
+
+- Complete source code
+- MySQL schema
+- requirements.txt
+- .env.example
+- README.md
+- VPS deployment guide
+- Replit deployment guide
+- Production-ready architecture
+- Fully commented code
+- Error-free implementation
+
+The final code should be modular, optimized, scalable, secure, and ready for real-world deployment.
+FORCE JOIN SYSTEM (ADVANCED)
+
+The bot must support dynamic force join channels managed entirely from the admin panel.
+
+Rules:
+
+1. If no channels are added in the admin panel:
+   
+   - Force join must be disabled automatically.
+   - User should directly see the Home Menu.
+   - User can immediately upload files.
+
+2. If one or more channels are added:
+   
+   - Force join must be enabled automatically.
+   - When the user presses /start, show a force join menu similar to FreeStorageBot.
+
+Message:
+
+🚫 Access Denied
+
+You must join all required channels to use this bot.
+
+After joining, click ✅ I Joined.
+
+Buttons:
+
+📢 Join Channel 1
+📢 Join Channel 2
+📢 Join Channel 3
+📢 Join Private
+✅ I Joined
+
+3. Verification Logic
+
+When user clicks "✅ I Joined":
+
+- Check membership in every required channel.
+- If user joined all channels:
+
+Show:
+
+✅ Verification successful!
+
+You can now use the bot.
+
+Then automatically delete or edit the previous force join message.
+
+Immediately display the Home Menu.
+
+- If user has not joined all channels:
+
+Show:
+
+❌ Verification failed!
+
+You must join all required channels before using this bot.
+
+Keep the force join menu visible.
+
+4. Message Editing
+
+The force join message must not create new messages repeatedly.
+
+Use message.edit_text() whenever possible.
+
+Old menus should be automatically removed or edited.
+
+Only one active menu should remain visible.
+
+5. Admin Panel Controls
+
+Admin must be able to:
+
+- Add Force Join Channel
+- Remove Force Join Channel
+- Enable Force Join
+- Disable Force Join
+- Edit Force Join Message Text
+- Edit Button Text
+- Reorder Channels
+
+6. Customizable Text
+
+Admin panel must allow editing:
+
+- Access Denied message
+- Verification Success message
+- Verification Failed message
+- Join Button text
+- Home Menu welcome message
+
+No code changes should be required to edit these texts.
+
+All text must be stored in the database and editable from the admin panel.
+BROADCAST SYSTEM (ADMIN PANEL)
+
+Create a powerful broadcast system inside the admin panel.
+
+Features:
+
+1. Send Message To All Users
+
+Admin can send:
+
+- Text Messages
+- Photos
+- Videos
+- Documents
+- Stickers
+- Voice Messages
+- Forwarded Messages
+
+2. One Click Broadcast
+
+Admin enters a message and clicks:
+
+📢 Send To All Users
+
+The bot automatically sends the message to every registered user.
+
+3. Broadcast Statistics
+
+After completion show:
+
+✅ Broadcast Completed
+
+Total Users: X
+Delivered: Y
+Failed: Z
+Blocked Users: A
+
+4. Background Processing
+
+- Broadcast must run in the background.
+- Large broadcasts should not freeze the bot.
+- Handle Telegram flood wait automatically.
+- Support 100,000+ users.
+
+5. Targeted Broadcast
+
+Admin can send messages to:
+
+- All Users
+- Premium Users Only
+- Non-Premium Users Only
+- Referred Users Only
+- Active Users Only
+
+6. Scheduled Broadcast
+
+Admin can schedule broadcasts:
+
+- Immediately
+- After 1 Hour
+- After 24 Hours
+- Custom Date & Time
+
+7. Broadcast History
+
+Store:
+
+- Message Content
+- Date
+- Total Delivered
+- Total Failed
+
+Admin can view previous broadcasts from the dashboard.
+
+8. Rich Formatting
+
+Support:
+
+- Bold
+- Italic
+- Underline
+- Links
+- Inline Buttons
+
+9. Admin Dashboard Button
+
+Add:
+
+📢 Broadcast
+
+inside the admin panel menu.
+
+10. Security
+
+Only OWNER and ADMINS can access broadcast features.
