@@ -1,4 +1,4 @@
-import random
+-import random
 import string
 import time
 from collections import defaultdict
