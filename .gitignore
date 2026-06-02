@@ -47,3 +47,14 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.session
+*.session-journal
+
+# Bot logs
+bot/logs/*.log
+
