@@ -37,11 +37,16 @@ async def init_db():
                 unique_code TEXT UNIQUE NOT NULL,
                 file_name TEXT NOT NULL,
                 file_id TEXT NOT NULL,
+                file_type TEXT DEFAULT 'document',
                 file_size BIGINT DEFAULT 0,
                 uploader_id BIGINT NOT NULL,
                 upload_date TIMESTAMP DEFAULT NOW(),
                 download_count INTEGER DEFAULT 0
             )
+        """)
+        # Migrate existing tables that may not have file_type column
+        await conn.execute("""
+            ALTER TABLE files ADD COLUMN IF NOT EXISTS file_type TEXT DEFAULT 'document'
         """)
         await conn.execute("""
             CREATE TABLE IF NOT EXISTS referrals (
@@ -168,12 +173,12 @@ async def remove_force_join_channel(channel_id: str):
     await pool.execute("DELETE FROM force_join_channels WHERE channel_id = $1", channel_id)
 
 
-async def save_file(unique_code: str, file_name: str, file_id: str, file_size: int, uploader_id: int):
+async def save_file(unique_code: str, file_name: str, file_id: str, file_size: int, uploader_id: int, file_type: str = "document"):
     pool = await get_pool()
     await pool.execute("""
-        INSERT INTO files (unique_code, file_name, file_id, file_size, uploader_id)
-        VALUES ($1, $2, $3, $4, $5)
-    """, unique_code, file_name, file_id, file_size, uploader_id)
+        INSERT INTO files (unique_code, file_name, file_id, file_type, file_size, uploader_id)
+        VALUES ($1, $2, $3, $4, $5, $6)
+    """, unique_code, file_name, file_id, file_type, file_size, uploader_id)
     await pool.execute("UPDATE users SET total_uploads = total_uploads + 1 WHERE user_id = $1", uploader_id)
 
 

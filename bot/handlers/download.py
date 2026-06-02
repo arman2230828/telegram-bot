@@ -8,6 +8,39 @@ from bot.utils.helpers import format_file_size, check_rate_limit
 logger = logging.getLogger(__name__)
 
 
+async def send_file_by_type(client: Client, user_id: int, file_record: dict):
+    """Send file using the correct Pyrogram method based on stored file_type."""
+    file_id = file_record["file_id"]
+    file_name = file_record["file_name"]
+    file_size = file_record["file_size"]
+    file_type = file_record.get("file_type") or "document"
+    download_count = file_record["download_count"] + 1
+
+    caption = (
+        f"📄 <b>{file_name}</b>\n"
+        f"📦 Size: {format_file_size(file_size)}\n"
+        f"⬇️ Downloads: {download_count}"
+    )
+
+    if file_type == "photo":
+        await client.send_photo(user_id, photo=file_id, caption=caption, parse_mode=enums.ParseMode.HTML)
+    elif file_type == "video":
+        await client.send_video(user_id, video=file_id, caption=caption, parse_mode=enums.ParseMode.HTML)
+    elif file_type == "audio":
+        await client.send_audio(user_id, audio=file_id, caption=caption, parse_mode=enums.ParseMode.HTML)
+    elif file_type == "voice":
+        await client.send_voice(user_id, voice=file_id)
+    elif file_type == "video_note":
+        await client.send_video_note(user_id, video_note=file_id)
+    elif file_type == "animation":
+        await client.send_animation(user_id, animation=file_id, caption=caption, parse_mode=enums.ParseMode.HTML)
+    elif file_type == "sticker":
+        await client.send_sticker(user_id, sticker=file_id)
+    else:
+        # Default: send as document (works for APK, ZIP, PDF, etc.)
+        await client.send_document(user_id, document=file_id, caption=caption, parse_mode=enums.ParseMode.HTML)
+
+
 async def handle_file_download(client: Client, message_or_query, unique_code: str):
     if isinstance(message_or_query, CallbackQuery):
         user = message_or_query.from_user
@@ -31,34 +64,26 @@ async def handle_file_download(client: Client, message_or_query, unique_code: st
 
     file_record = await db.get_file_by_code(unique_code)
     if not file_record:
-        await reply_func("❌ <b>File not found.</b> The link may be invalid or the file was deleted.", parse_mode=enums.ParseMode.HTML)
+        await reply_func(
+            "❌ <b>File not found.</b> The link may be invalid or the file was deleted.",
+            parse_mode=enums.ParseMode.HTML
+        )
         return
 
     try:
         status = await reply_func("⏳ Fetching your file...")
         await db.increment_download_count(unique_code, user.id)
-
-        file_id = file_record["file_id"]
-        file_name = file_record["file_name"]
-        file_size = file_record["file_size"]
-
-        await client.send_document(
-            user.id,
-            document=file_id,
-            caption=(
-                f"📄 <b>{file_name}</b>\n"
-                f"📦 Size: {format_file_size(file_size)}\n"
-                f"⬇️ Downloads: {file_record['download_count'] + 1}"
-            ),
-            parse_mode=enums.ParseMode.HTML
-        )
+        await send_file_by_type(client, user.id, file_record)
         await status.delete()
-        logger.info(f"User {user.id} downloaded file: {file_name} ({unique_code})")
+        logger.info(f"User {user.id} downloaded file: {file_record['file_name']} ({unique_code})")
 
     except Exception as e:
         logger.error(f"Download error for {unique_code}: {e}")
         try:
-            await status.edit_text("❌ <b>Download failed.</b> Please try again.", parse_mode=enums.ParseMode.HTML)
+            await status.edit_text(
+                "❌ <b>Download failed.</b> Please try again.",
+                parse_mode=enums.ParseMode.HTML
+            )
         except Exception:
             pass
 
@@ -117,8 +142,7 @@ def register_download_handlers(app: Client):
             return
 
         if file_record["uploader_id"] != query.from_user.id:
-            from bot import database as db2
-            if not await db2.is_admin(query.from_user.id):
+            if not await db.is_admin(query.from_user.id):
                 await query.answer("❌ You can only delete your own files.", show_alert=True)
                 return
 

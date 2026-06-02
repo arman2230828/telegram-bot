@@ -138,7 +138,7 @@ def register_upload_handlers(app: Client):
                 unique_code = generate_unique_code()
 
             # Save metadata
-            await db.save_file(unique_code, file_name, stored_file_id, file_size, user.id)
+            await db.save_file(unique_code, file_name, stored_file_id, file_size, user.id, file_type)
 
             from bot.config import BOT_USERNAME
             link = get_deep_link(BOT_USERNAME, unique_code)
