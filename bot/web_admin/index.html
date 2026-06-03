@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Get Free Storage — Admin</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+<style>
+  [x-cloak]{display:none!important}
+  .sidebar-link{@apply flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 cursor-pointer;}
+  .sidebar-link:hover{@apply bg-blue-50 text-blue-700;}
+  .sidebar-link.active{@apply bg-blue-600 text-white shadow-sm;}
+  .card{@apply bg-white rounded-2xl shadow-sm border border-gray-100 p-6;}
+  .btn-primary{@apply bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors;}
+  .btn-danger{@apply bg-red-500 hover:bg-red-600 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition-colors;}
+  .btn-success{@apply bg-green-500 hover:bg-green-600 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition-colors;}
+  .btn-gray{@apply bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors;}
+  .input{@apply w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;}
+  .badge-banned{@apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700;}
+  .badge-premium{@apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700;}
+  .badge-ok{@apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700;}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
+  ::-webkit-scrollbar{width:4px;height:4px;}
+  ::-webkit-scrollbar-track{background:#f1f5f9;}
+  ::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:4px;}
+</style>
+</head>
+<body class="bg-gray-50 text-gray-800" x-data="adminApp()" x-cloak>
+
+<!-- LOGIN SCREEN -->
+<div x-show="!token" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+  <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-sm mx-4">
+    <div class="text-center mb-8">
+      <div class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+      </div>
+      <h1 class="text-xl font-bold text-gray-900">Get Free Storage</h1>
+      <p class="text-sm text-gray-500 mt-1">Admin Panel</p>
+    </div>
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Admin Password</label>
+        <input type="password" class="input" placeholder="Enter your password" x-model="loginPass"
+          @keydown.enter="doLogin()" :disabled="loginLoading">
+      </div>
+      <p x-show="loginError" class="text-red-500 text-sm" x-text="loginError"></p>
+      <button class="btn-primary w-full py-2.5 text-base" @click="doLogin()" :disabled="loginLoading">
+        <span x-show="!loginLoading">Sign In</span>
+        <span x-show="loginLoading">Signing in...</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div x-show="token" class="flex h-screen overflow-hidden">
+
+  <!-- SIDEBAR -->
+  <aside class="w-64 bg-white border-r border-gray-100 flex flex-col shadow-sm flex-shrink-0 hidden lg:flex">
+    <div class="p-5 border-b border-gray-100">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/></svg>
+        </div>
+        <div>
+          <div class="font-bold text-gray-900 text-sm">Get Free Storage</div>
+          <div class="text-xs text-gray-400">Admin Panel</div>
+        </div>
+      </div>
+    </div>
+    <nav class="flex-1 p-3 space-y-0.5 overflow-y-auto">
+      <div class="sidebar-link" :class="page==='dashboard'?'active':'text-gray-600'" @click="setPage('dashboard')">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+        Dashboard
+      </div>
+      <div class="sidebar-link" :class="page==='users'?'active':'text-gray-600'" @click="setPage('users')">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        Users
+      </div>
+      <div class="sidebar-link" :class="page==='files'?'active':'text-gray-600'" @click="setPage('files')">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+        Files
+      </div>
+      <div class="sidebar-link" :class="page==='channels'?'active':'text-gray-600'" @click="setPage('channels')">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/></svg>
+        Force-Join Channels
+      </div>
+      <div class="sidebar-link" :class="page==='texts'?'active':'text-gray-600'" @click="setPage('texts')">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+        Bot Texts
+      </div>
+      <div class="sidebar-link" :class="page==='broadcast'?'active':'text-gray-600'" @click="setPage('broadcast')">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>
+        Broadcast
+      </div>
+      <div class="sidebar-link" :class="page==='history'?'active':'text-gray-600'" @click="setPage('history')">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Broadcast History
+      </div>
+    </nav>
+    <div class="p-3 border-t border-gray-100">
+      <button class="sidebar-link text-gray-500 hover:text-red-600 hover:bg-red-50 w-full" @click="logout()">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        Logout
+      </button>
+    </div>
+  </aside>
+
+  <!-- MOBILE SIDEBAR OVERLAY -->
+  <div x-show="mobileSidebar" class="fixed inset-0 z-40 lg:hidden" @click="mobileSidebar=false">
+    <div class="absolute inset-0 bg-black/30"></div>
+    <aside class="relative w-64 h-full bg-white flex flex-col shadow-xl">
+      <div class="p-5 border-b border-gray-100 flex items-center justify-between">
+        <div class="font-bold text-gray-900">Admin Panel</div>
+        <button @click="mobileSidebar=false" class="text-gray-400 hover:text-gray-600">✕</button>
+      </div>
+      <nav class="flex-1 p-3 space-y-0.5">
+        <template x-for="item in navItems" :key="item.key">
+          <div class="sidebar-link" :class="page===item.key?'active':'text-gray-600'" @click="setPage(item.key);mobileSidebar=false" x-text="item.label"></div>
+        </template>
+      </nav>
+      <div class="p-3 border-t border-gray-100">
+        <button class="sidebar-link text-red-500 w-full" @click="logout()">Logout</button>
+      </div>
+    </aside>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <main class="flex-1 overflow-y-auto">
+    <!-- TOP BAR -->
+    <header class="bg-white border-b border-gray-100 px-4 lg:px-8 py-4 flex items-center gap-4 sticky top-0 z-20">
+      <button class="lg:hidden p-2 rounded-lg hover:bg-gray-100" @click="mobileSidebar=true">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <div>
+        <h1 class="font-bold text-gray-900" x-text="pageTitle"></h1>
+        <p class="text-xs text-gray-400 hidden sm:block" x-text="pageSubtitle"></p>
+      </div>
+      <div class="ml-auto flex items-center gap-2">
+        <span x-show="toast" x-text="toast" class="text-xs bg-green-500 text-white px-3 py-1.5 rounded-full transition-all"></span>
+        <button class="text-xs text-gray-400 hover:text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-100" @click="refreshPage()">↻ Refresh</button>
+      </div>
+    </header>
+
+    <div class="p-4 lg:p-8">
+
+      <!-- DASHBOARD -->
+      <div x-show="page==='dashboard'">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div class="card">
+            <div class="text-2xl font-bold text-blue-600" x-text="stats.total_users ?? '—'"></div>
+            <div class="text-sm text-gray-500 mt-1">Total Users</div>
+          </div>
+          <div class="card">
+            <div class="text-2xl font-bold text-indigo-600" x-text="stats.total_files ?? '—'"></div>
+            <div class="text-sm text-gray-500 mt-1">Total Files</div>
+          </div>
+          <div class="card">
+            <div class="text-2xl font-bold text-green-600" x-text="stats.total_downloads ?? '—'"></div>
+            <div class="text-sm text-gray-500 mt-1">Total Downloads</div>
+          </div>
+          <div class="card">
+            <div class="text-2xl font-bold text-yellow-500" x-text="stats.premium_users ?? '—'"></div>
+            <div class="text-sm text-gray-500 mt-1">Premium Users</div>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+          <div class="card">
+            <div class="font-semibold text-gray-700 mb-4">Today's Activity</div>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-gray-500">Uploads Today</span>
+                <span class="font-bold text-blue-600" x-text="stats.daily_uploads ?? 0"></span>
+              </div>
+              <div class="h-px bg-gray-100"></div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-gray-500">New Users Today</span>
+                <span class="font-bold text-green-600" x-text="stats.daily_joins ?? 0"></span>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="font-semibold text-gray-700 mb-4">Quick Actions</div>
+            <div class="space-y-2">
+              <button class="btn-primary w-full text-left" @click="setPage('broadcast')">📢 Send Broadcast Message</button>
+              <button class="w-full text-left text-sm px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors" @click="setPage('users')">👥 Manage Users</button>
+              <button class="w-full text-left text-sm px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors" @click="setPage('channels')">📡 Manage Force-Join Channels</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- USERS -->
+      <div x-show="page==='users'">
+        <div class="card mb-4">
+          <div class="flex flex-col sm:flex-row gap-3 mb-4">
+            <input class="input flex-1" placeholder="Search by name, username, or user ID..." x-model="userSearch" @input.debounce.400ms="loadUsers(1)">
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="border-b border-gray-100 text-left">
+                  <th class="pb-3 font-medium text-gray-500 pr-4">User</th>
+                  <th class="pb-3 font-medium text-gray-500 pr-4 hidden md:table-cell">ID</th>
+                  <th class="pb-3 font-medium text-gray-500 pr-4 hidden lg:table-cell">Joined</th>
+                  <th class="pb-3 font-medium text-gray-500 pr-4 hidden sm:table-cell">Uploads</th>
+                  <th class="pb-3 font-medium text-gray-500 pr-4">Status</th>
+                  <th class="pb-3 font-medium text-gray-500">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-50">
+                <template x-for="u in users" :key="u.user_id">
+                  <tr class="hover:bg-gray-50">
+                    <td class="py-3 pr-4">
+                      <div class="font-medium text-gray-900" x-text="u.first_name || 'Unknown'"></div>
+                      <div class="text-xs text-gray-400" x-text="u.username ? '@'+u.username : 'No username'"></div>
+                    </td>
+                    <td class="py-3 pr-4 hidden md:table-cell text-gray-500 font-mono text-xs" x-text="u.user_id"></td>
+                    <td class="py-3 pr-4 hidden lg:table-cell text-gray-400 text-xs" x-text="fmtDate(u.join_date)"></td>
+                    <td class="py-3 pr-4 hidden sm:table-cell text-gray-600" x-text="u.total_uploads"></td>
+                    <td class="py-3 pr-4">
+                      <span x-show="u.is_banned" class="badge-banned">Banned</span>
+                      <span x-show="u.is_premium && !u.is_banned" class="badge-premium">Premium</span>
+                      <span x-show="!u.is_banned && !u.is_premium" class="badge-ok">Active</span>
+                    </td>
+                    <td class="py-3">
+                      <div class="flex flex-wrap gap-1">
+                        <button x-show="!u.is_banned" class="btn-danger" @click="banUser(u.user_id)">Ban</button>
+                        <button x-show="u.is_banned" class="btn-success" @click="unbanUser(u.user_id)">Unban</button>
+                        <button x-show="!u.is_premium" class="btn-gray" @click="setPremium(u.user_id, true)">+Premium</button>
+                        <button x-show="u.is_premium" class="btn-gray" @click="setPremium(u.user_id, false)">-Premium</button>
+                      </div>
+                    </td>
+                  </tr>
+                </template>
+                <tr x-show="users.length===0">
+                  <td colspan="6" class="py-8 text-center text-gray-400">No users found</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
+            <span class="text-sm text-gray-400" x-text="`${userTotal} total users`"></span>
+            <div class="flex gap-2">
+              <button class="btn-gray" @click="loadUsers(userPage-1)" :disabled="userPage<=1">← Prev</button>
+              <span class="text-sm text-gray-500 self-center" x-text="`Page ${userPage}`"></span>
+              <button class="btn-gray" @click="loadUsers(userPage+1)" :disabled="userPage*20>=userTotal">Next →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FILES -->
+      <div x-show="page==='files'">
+        <div class="card mb-4">
+          <div class="mb-4">
+            <input class="input" placeholder="Search files by name..." x-model="fileSearch" @input.debounce.400ms="loadFiles(1)">
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="border-b border-gray-100 text-left">
+                  <th class="pb-3 font-medium text-gray-500 pr-4">File Name</th>
+                  <th class="pb-3 font-medium text-gray-500 pr-4 hidden sm:table-cell">Type</th>
+                  <th class="pb-3 font-medium text-gray-500 pr-4 hidden md:table-cell">Uploader</th>
+                  <th class="pb-3 font-medium text-gray-500 pr-4 hidden lg:table-cell">Date</th>
+                  <th class="pb-3 font-medium text-gray-500 pr-4">Downloads</th>
+                  <th class="pb-3 font-medium text-gray-500">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-50">
+                <template x-for="f in files" :key="f.unique_code">
+                  <tr class="hover:bg-gray-50">
+                    <td class="py-3 pr-4">
+                      <div class="font-medium text-gray-900 max-w-xs truncate" x-text="f.file_name"></div>
+                      <div class="text-xs text-gray-400 font-mono" x-text="f.unique_code"></div>
+                    </td>
+                    <td class="py-3 pr-4 hidden sm:table-cell">
+                      <span class="badge-ok" x-text="f.file_type || 'document'"></span>
+                    </td>
+                    <td class="py-3 pr-4 hidden md:table-cell text-gray-500 text-xs" x-text="f.first_name || f.uploader_id"></td>
+                    <td class="py-3 pr-4 hidden lg:table-cell text-gray-400 text-xs" x-text="fmtDate(f.upload_date)"></td>
+                    <td class="py-3 pr-4 text-gray-600" x-text="f.download_count"></td>
+                    <td class="py-3">
+                      <div class="flex gap-1">
+                        <button class="btn-gray" @click="copyLink(f.unique_code)">Copy Link</button>
+                        <button class="btn-danger" @click="deleteFile(f.unique_code)">Delete</button>
+                      </div>
+                    </td>
+                  </tr>
+                </template>
+                <tr x-show="files.length===0">
+                  <td colspan="6" class="py-8 text-center text-gray-400">No files found</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
+            <span class="text-sm text-gray-400" x-text="`${fileTotal} total files`"></span>
+            <div class="flex gap-2">
+              <button class="btn-gray" @click="loadFiles(filePage-1)" :disabled="filePage<=1">← Prev</button>
+              <span class="text-sm text-gray-500 self-center" x-text="`Page ${filePage}`"></span>
+              <button class="btn-gray" @click="loadFiles(filePage+1)" :disabled="filePage*20>=fileTotal">Next →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHANNELS -->
+      <div x-show="page==='channels'">
+        <div class="card mb-4">
+          <div class="font-semibold text-gray-700 mb-4">Add Force-Join Channel</div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+            <div>
+              <label class="block text-xs font-medium text-gray-500 mb-1">Channel ID <span class="text-gray-400">(e.g. -1001234567890)</span></label>
+              <input class="input" placeholder="-1001234567890" x-model="newChannelId">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-500 mb-1">Username <span class="text-gray-400">(optional, e.g. @mychannel)</span></label>
+              <input class="input" placeholder="@mychannel" x-model="newChannelUsername">
+            </div>
+          </div>
+          <button class="btn-primary" @click="addChannel()">Add Channel</button>
+        </div>
+        <div class="card">
+          <div class="font-semibold text-gray-700 mb-4">Current Force-Join Channels</div>
+          <div x-show="channels.length===0" class="text-gray-400 text-sm py-4 text-center">No force-join channels configured</div>
+          <div class="space-y-2">
+            <template x-for="ch in channels" :key="ch.channel_id">
+              <div class="flex items-center justify-between p-3 rounded-lg bg-gray-50 border border-gray-100">
+                <div>
+                  <div class="font-medium text-sm font-mono" x-text="ch.channel_id"></div>
+                  <div class="text-xs text-gray-400" x-text="ch.channel_username || 'Private channel'"></div>
+                </div>
+                <button class="btn-danger" @click="removeChannel(ch.channel_id)">Remove</button>
+              </div>
+            </template>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOT TEXTS -->
+      <div x-show="page==='texts'">
+        <div class="space-y-4">
+          <template x-for="(val, key) in texts" :key="key">
+            <div class="card">
+              <div class="font-medium text-gray-700 mb-1 capitalize" x-text="key.replace(/_/g,' ')"></div>
+              <div class="text-xs text-gray-400 mb-3">Key: <span class="font-mono" x-text="key"></span></div>
+              <textarea class="input mb-3 font-mono text-xs resize-y" rows="4" x-model="texts[key]"></textarea>
+              <button class="btn-primary" @click="saveText(key)">Save</button>
+            </div>
+          </template>
+          <div x-show="Object.keys(texts).length===0" class="card text-center text-gray-400 py-8">Loading bot texts...</div>
+        </div>
+      </div>
+
+      <!-- BROADCAST -->
+      <div x-show="page==='broadcast'">
+        <div class="card max-w-2xl">
+          <div class="font-semibold text-gray-700 mb-5">Send Broadcast Message</div>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-600 mb-1">Target Audience</label>
+              <select class="input" x-model="bcastTarget">
+                <option value="all">👥 All Users</option>
+                <option value="premium">⭐ Premium Users Only</option>
+                <option value="non_premium">🆓 Non-Premium Users</option>
+                <option value="referred">🎁 Referred Users</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-600 mb-1">Message <span class="text-gray-400 text-xs">(HTML formatting supported)</span></label>
+              <textarea class="input resize-y" rows="8" placeholder="Enter your broadcast message here...&#10;&#10;HTML is supported: &lt;b&gt;bold&lt;/b&gt;, &lt;i&gt;italic&lt;/i&gt;, &lt;code&gt;code&lt;/code&gt;, &lt;a href=&#34;url&#34;&gt;link&lt;/a&gt;" x-model="bcastMessage"></textarea>
+            </div>
+            <div class="bg-blue-50 rounded-lg p-3 text-xs text-blue-700">
+              ℹ️ The broadcast will be processed by the bot in the background. Large broadcasts may take a few minutes. Check Broadcast History for status.
+            </div>
+            <button class="btn-primary px-6 py-2.5" @click="sendBroadcast()" :disabled="bcastSending">
+              <span x-show="!bcastSending">📢 Send Broadcast</span>
+              <span x-show="bcastSending">Queuing...</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- BROADCAST HISTORY -->
+      <div x-show="page==='history'">
+        <div class="card">
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="border-b border-gray-100 text-left">
+                  <th class="pb-3 font-medium text-gray-500 pr-4">Date</th>
+                  <th class="pb-3 font-medium text-gray-500 pr-4">Target</th>
+                  <th class="pb-3 font-medium text-gray-500 pr-4">Delivered</th>
+                  <th class="pb-3 font-medium text-gray-500 pr-4">Failed</th>
+                  <th class="pb-3 font-medium text-gray-500">Message Preview</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-50">
+                <template x-for="h in history" :key="h.id">
+                  <tr class="hover:bg-gray-50">
+                    <td class="py-3 pr-4 text-xs text-gray-500" x-text="fmtDate(h.sent_at)"></td>
+                    <td class="py-3 pr-4">
+                      <span class="badge-ok" x-text="h.target_group"></span>
+                    </td>
+                    <td class="py-3 pr-4 text-green-600 font-medium" x-text="h.total_delivered"></td>
+                    <td class="py-3 pr-4 text-red-500 font-medium" x-text="h.total_failed"></td>
+                    <td class="py-3 text-xs text-gray-400 max-w-xs truncate" x-text="(h.message_content||'').substring(0,80)"></td>
+                  </tr>
+                </template>
+                <tr x-show="history.length===0">
+                  <td colspan="5" class="py-8 text-center text-gray-400">No broadcast history</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script>
+const BASE = window.location.origin;
+
+function adminApp() {
+  return {
+    token: localStorage.getItem('admin_token') || '',
+    loginPass: '',
+    loginLoading: false,
+    loginError: '',
+    page: 'dashboard',
+    mobileSidebar: false,
+    toast: '',
+    toastTimer: null,
+    stats: {},
+    users: [], userTotal: 0, userPage: 1, userSearch: '',
+    files: [], fileTotal: 0, filePage: 1, fileSearch: '',
+    channels: [],
+    newChannelId: '', newChannelUsername: '',
+    texts: {},
+    bcastMessage: '', bcastTarget: 'all', bcastSending: false,
+    history: [],
+    navItems: [
+      {key:'dashboard',label:'Dashboard'},
+      {key:'users',label:'Users'},
+      {key:'files',label:'Files'},
+      {key:'channels',label:'Force-Join Channels'},
+      {key:'texts',label:'Bot Texts'},
+      {key:'broadcast',label:'Broadcast'},
+      {key:'history',label:'Broadcast History'},
+    ],
+
+    get pageTitle() {
+      const map = {dashboard:'Dashboard',users:'Users',files:'Files',channels:'Force-Join Channels',texts:'Bot Texts',broadcast:'Broadcast',history:'Broadcast History'};
+      return map[this.page] || '';
+    },
+    get pageSubtitle() {
+      const map = {dashboard:'Overview of your bot',users:'Manage all users',files:'Browse and manage stored files',channels:'Control who can use the bot',texts:'Edit bot messages',broadcast:'Send messages to all users',history:'Past broadcast results'};
+      return map[this.page] || '';
+    },
+
+    async init() {
+      if (this.token) {
+        await this.loadDashboard();
+      }
+    },
+
+    showToast(msg) {
+      this.toast = msg;
+      clearTimeout(this.toastTimer);
+      this.toastTimer = setTimeout(() => this.toast = '', 3000);
+    },
+
+    async api(method, path, body) {
+      const opts = {method, headers:{'Content-Type':'application/json','Authorization':'Bearer '+this.token}};
+      if (body) opts.body = JSON.stringify(body);
+      const res = await fetch(BASE + path, opts);
+      if (res.status === 401) { this.logout(); return null; }
+      if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.detail || 'Error'); }
+      return res.json();
+    },
+
+    async doLogin() {
+      this.loginLoading = true; this.loginError = '';
+      try {
+        const data = await fetch(BASE+'/api/login', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:this.loginPass})});
+        if (!data.ok) { this.loginError = 'Wrong password'; return; }
+        const json = await data.json();
+        this.token = json.token;
+        localStorage.setItem('admin_token', this.token);
+        await this.loadDashboard();
+      } catch(e) { this.loginError = 'Connection error'; }
+      finally { this.loginLoading = false; }
+    },
+
+    logout() {
+      this.token = ''; localStorage.removeItem('admin_token'); this.loginPass = '';
+    },
+
+    async setPage(p) {
+      this.page = p;
+      if (p==='dashboard') await this.loadDashboard();
+      else if (p==='users') await this.loadUsers(1);
+      else if (p==='files') await this.loadFiles(1);
+      else if (p==='channels') await this.loadChannels();
+      else if (p==='texts') await this.loadTexts();
+      else if (p==='history') await this.loadHistory();
+    },
+
+    async refreshPage() { await this.setPage(this.page); this.showToast('Refreshed'); },
+
+    async loadDashboard() {
+      try { this.stats = await this.api('GET', '/api/stats'); } catch(e){}
+    },
+    async loadUsers(p) {
+      this.userPage = p;
+      try {
+        const d = await this.api('GET', `/api/users?page=${p}&search=${encodeURIComponent(this.userSearch)}`);
+        if (d) { this.users = d.users; this.userTotal = d.total; }
+      } catch(e){}
+    },
+    async loadFiles(p) {
+      this.filePage = p;
+      try {
+        const d = await this.api('GET', `/api/files?page=${p}&search=${encodeURIComponent(this.fileSearch)}`);
+        if (d) { this.files = d.files; this.fileTotal = d.total; }
+      } catch(e){}
+    },
+    async loadChannels() {
+      try { const d = await this.api('GET', '/api/channels'); if(d) this.channels = d.channels; } catch(e){}
+    },
+    async loadTexts() {
+      try { const d = await this.api('GET', '/api/texts'); if(d) this.texts = d.texts; } catch(e){}
+    },
+    async loadHistory() {
+      try { const d = await this.api('GET', '/api/broadcast/history'); if(d) this.history = d.history; } catch(e){}
+    },
+
+    async banUser(id) {
+      if(!confirm(`Ban user ${id}?`)) return;
+      try { await this.api('POST', `/api/users/${id}/ban`); this.showToast('User banned'); await this.loadUsers(this.userPage); } catch(e){ alert(e.message); }
+    },
+    async unbanUser(id) {
+      try { await this.api('POST', `/api/users/${id}/unban`); this.showToast('User unbanned'); await this.loadUsers(this.userPage); } catch(e){ alert(e.message); }
+    },
+    async setPremium(id, set) {
+      try {
+        if(set) await this.api('POST', `/api/users/${id}/premium`);
+        else await this.api('DELETE', `/api/users/${id}/premium`);
+        this.showToast(set ? 'Premium granted' : 'Premium removed');
+        await this.loadUsers(this.userPage);
+      } catch(e){ alert(e.message); }
+    },
+    async deleteFile(code) {
+      if(!confirm(`Delete file ${code}? This cannot be undone.`)) return;
+      try { await this.api('DELETE', `/api/files/${code}`); this.showToast('File deleted'); await this.loadFiles(this.filePage); } catch(e){ alert(e.message); }
+    },
+    copyLink(code) {
+      const link = `https://t.me/Getfreestorage_bot?start=file_${code}`;
+      navigator.clipboard.writeText(link).then(()=>this.showToast('Link copied!')).catch(()=>prompt('Copy this link:', link));
+    },
+    async addChannel() {
+      if(!this.newChannelId.trim()) return alert('Channel ID is required');
+      try {
+        await this.api('POST', '/api/channels', {channel_id: this.newChannelId.trim(), channel_username: this.newChannelUsername.trim()});
+        this.showToast('Channel added'); this.newChannelId=''; this.newChannelUsername=''; await this.loadChannels();
+      } catch(e){ alert(e.message); }
+    },
+    async removeChannel(id) {
+      if(!confirm(`Remove channel ${id}?`)) return;
+      try { await this.api('DELETE', `/api/channels/${encodeURIComponent(id)}`); this.showToast('Channel removed'); await this.loadChannels(); } catch(e){ alert(e.message); }
+    },
+    async saveText(key) {
+      try { await this.api('PUT', `/api/texts/${key}`, {value: this.texts[key]}); this.showToast(`"${key}" saved`); } catch(e){ alert(e.message); }
+    },
+    async sendBroadcast() {
+      if(!this.bcastMessage.trim()) return alert('Message cannot be empty');
+      if(!confirm(`Send broadcast to ${this.bcastTarget} users?`)) return;
+      this.bcastSending = true;
+      try {
+        await this.api('POST', '/api/broadcast', {message: this.bcastMessage, target: this.bcastTarget});
+        this.showToast('Broadcast queued successfully!'); this.bcastMessage='';
+      } catch(e){ alert(e.message); }
+      finally { this.bcastSending = false; }
+    },
+
+    fmtDate(iso) {
+      if(!iso) return '—';
+      const d = new Date(iso);
+      return d.toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'});
+    },
+  };
+}
+</script>
+</body>
+</html>

@@ -17,16 +17,7 @@ _pending_broadcast: dict = {}
 
 def register_admin_handlers(app: Client):
 
-    @app.on_message(filters.command("admin") & filters.private)
-    async def admin_command(client: Client, message: Message):
-        if not await db.is_admin(message.from_user.id):
-            await message.reply_text("❌ You are not authorized to use this command.")
-            return
-        await message.reply_text(
-            "🔧 <b>Admin Panel</b>\n\nWelcome, Admin. Choose an action:",
-            reply_markup=admin_panel_keyboard(),
-            parse_mode=enums.ParseMode.HTML
-        )
+    # /admin command removed — use Web Admin Panel instead
 
     @app.on_callback_query(filters.regex("^admin_panel$"))
     async def admin_panel_callback(client: Client, query: CallbackQuery):
@@ -54,28 +45,9 @@ def register_admin_handlers(app: Client):
             f"📅 <b>Today</b>\n"
             f"📤 Daily Uploads: <b>{stats['daily_uploads']}</b>\n"
             f"👤 Daily Joins: <b>{stats['daily_joins']}</b>",
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back", callback_data="admin_panel")]]),
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("« Back", callback_data="admin_panel")]]),
             parse_mode=enums.ParseMode.HTML
         )
-
-    @app.on_message(filters.command("stats") & filters.private)
-    async def stats_command(client: Client, message: Message):
-        if not await db.is_admin(message.from_user.id):
-            await message.reply_text("❌ Unauthorized.")
-            return
-        stats = await db.get_stats()
-        await message.reply_text(
-            f"📊 <b>Stats</b>\n\n"
-            f"👥 Users: {stats['total_users']}\n"
-            f"📁 Files: {stats['total_files']}\n"
-            f"⬇️ Downloads: {stats['total_downloads']}\n"
-            f"⭐ Premium: {stats['premium_users']}\n"
-            f"📤 Daily Uploads: {stats['daily_uploads']}\n"
-            f"👤 Daily Joins: {stats['daily_joins']}",
-            parse_mode=enums.ParseMode.HTML
-        )
-
-    # ─── BAN / UNBAN ───────────────────────────────────────────────────────────
 
     @app.on_callback_query(filters.regex("^admin_ban$"))
     async def admin_ban_prompt(client: Client, query: CallbackQuery):
@@ -85,7 +57,7 @@ def register_admin_handlers(app: Client):
         _pending_admin_action[query.from_user.id] = "ban"
         await query.message.edit_text(
             "🚫 <b>Ban User</b>\n\nReply with the user ID to ban:",
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("❌ Cancel", callback_data="admin_panel")]]),
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("✕ Cancel", callback_data="admin_panel")]]),
             parse_mode=enums.ParseMode.HTML
         )
 
@@ -97,7 +69,7 @@ def register_admin_handlers(app: Client):
         _pending_admin_action[query.from_user.id] = "unban"
         await query.message.edit_text(
             "✅ <b>Unban User</b>\n\nReply with the user ID to unban:",
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("❌ Cancel", callback_data="admin_panel")]]),
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("✕ Cancel", callback_data="admin_panel")]]),
             parse_mode=enums.ParseMode.HTML
         )
 
@@ -109,7 +81,7 @@ def register_admin_handlers(app: Client):
         _pending_admin_action[query.from_user.id] = "addadmin"
         await query.message.edit_text(
             "👑 <b>Add Admin</b>\n\nReply with the user ID to promote:",
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("❌ Cancel", callback_data="admin_panel")]]),
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("✕ Cancel", callback_data="admin_panel")]]),
             parse_mode=enums.ParseMode.HTML
         )
 
@@ -121,7 +93,7 @@ def register_admin_handlers(app: Client):
         _pending_admin_action[query.from_user.id] = "removeadmin"
         await query.message.edit_text(
             "➖ <b>Remove Admin</b>\n\nReply with the user ID to demote:",
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("❌ Cancel", callback_data="admin_panel")]]),
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("✕ Cancel", callback_data="admin_panel")]]),
             parse_mode=enums.ParseMode.HTML
         )
 
@@ -135,7 +107,7 @@ def register_admin_handlers(app: Client):
             "📡 <b>Add Force Join Channel</b>\n\n"
             "Reply with the channel ID (e.g. <code>-1001234567890</code>) or username (e.g. <code>@mychannel</code>):\n\n"
             "⚠️ Make sure the bot is an admin in the channel.",
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("❌ Cancel", callback_data="admin_panel")]]),
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("✕ Cancel", callback_data="admin_panel")]]),
             parse_mode=enums.ParseMode.HTML
         )
 
@@ -151,8 +123,8 @@ def register_admin_handlers(app: Client):
         _pending_admin_action[query.from_user.id] = "removechannel"
         ch_list = "\n".join([f"• <code>{ch['channel_id']}</code> ({ch['channel_username'] or 'private'})" for ch in channels])
         await query.message.edit_text(
-            f"🗑️ <b>Remove Force Join Channel</b>\n\nCurrent channels:\n{ch_list}\n\nReply with the channel ID to remove:",
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("❌ Cancel", callback_data="admin_panel")]]),
+            f"🗑 <b>Remove Force Join Channel</b>\n\nCurrent channels:\n{ch_list}\n\nReply with the channel ID to remove:",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("✕ Cancel", callback_data="admin_panel")]]),
             parse_mode=enums.ParseMode.HTML
         )
 
@@ -163,12 +135,10 @@ def register_admin_handlers(app: Client):
             return
         _pending_admin_action[query.from_user.id] = "deletefile"
         await query.message.edit_text(
-            "🗑️ <b>Delete File</b>\n\nReply with the unique file code to delete:",
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("❌ Cancel", callback_data="admin_panel")]]),
+            "🗑 <b>Delete File</b>\n\nReply with the unique file code to delete:",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("✕ Cancel", callback_data="admin_panel")]]),
             parse_mode=enums.ParseMode.HTML
         )
-
-    # ─── EDIT TEXTS ────────────────────────────────────────────────────────────
 
     @app.on_callback_query(filters.regex("^admin_edittexts$"))
     async def admin_edittexts_callback(client: Client, query: CallbackQuery):
@@ -192,12 +162,10 @@ def register_admin_handlers(app: Client):
         await query.message.edit_text(
             f"📝 <b>Edit: {key}</b>\n\n"
             f"<b>Current value:</b>\n<code>{current}</code>\n\n"
-            f"Reply with the new text (supports HTML formatting):",
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("❌ Cancel", callback_data="admin_edittexts")]]),
+            f"Reply with the new text (HTML formatting supported):",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("✕ Cancel", callback_data="admin_edittexts")]]),
             parse_mode=enums.ParseMode.HTML
         )
-
-    # ─── BROADCAST ─────────────────────────────────────────────────────────────
 
     @app.on_callback_query(filters.regex("^admin_broadcast$"))
     async def admin_broadcast_callback(client: Client, query: CallbackQuery):
@@ -234,9 +202,8 @@ def register_admin_handlers(app: Client):
         await query.message.edit_text(
             f"📢 <b>Broadcast</b>\n\nTarget: <b>{target}</b> | Schedule: <b>{schedule}</b>\n\n"
             f"Now send the message you want to broadcast.\n\n"
-            f"Supports: Text, Photos, Videos, Documents, Stickers, Voice, Forwarded messages.\n"
-            f"HTML formatting is supported.",
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("❌ Cancel", callback_data="admin_panel")]]),
+            f"Supports: Text, Photos, Videos, Documents, Stickers, Voice, Forwarded messages.",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("✕ Cancel", callback_data="admin_panel")]]),
             parse_mode=enums.ParseMode.HTML
         )
 
@@ -257,40 +224,45 @@ def register_admin_handlers(app: Client):
             )
         await query.message.edit_text(
             "📜 <b>Broadcast History</b>\n\n" + "\n\n".join(lines),
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back", callback_data="admin_panel")]]),
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("« Back", callback_data="admin_panel")]]),
             parse_mode=enums.ParseMode.HTML
         )
 
-    # ─── TEXT MESSAGE HANDLER (for pending admin actions) ──────────────────────
+    # ─── TEXT MESSAGE HANDLER for pending admin actions ──────────────────────
 
     @app.on_message(filters.private & filters.text & ~filters.command([
-        "start", "help", "admin", "stats"
+        "start", "help", "stats"
     ]))
     async def admin_text_handler(client: Client, message: Message):
         user_id = message.from_user.id
 
-        # Handle pending admin actions
         if user_id in _pending_admin_action:
             action = _pending_admin_action.pop(user_id)
             await handle_admin_text_action(client, message, action)
+            message.stop_propagation()
             return
 
-        # Handle broadcast message
         if user_id in _pending_broadcast:
             bcast_info = _pending_broadcast.pop(user_id)
             await handle_broadcast_message(client, message, bcast_info)
+            message.stop_propagation()
             return
 
-    @app.on_message(filters.private & (filters.photo | filters.video | filters.document | filters.audio | filters.voice | filters.sticker | filters.animation))
+    # ─── MEDIA BROADCAST HANDLER (must be before upload handler) ─────────────
+
+    @app.on_message(filters.private & (
+        filters.photo | filters.video | filters.document |
+        filters.audio | filters.voice | filters.sticker | filters.animation
+    ))
     async def admin_media_broadcast_handler(client: Client, message: Message):
         user_id = message.from_user.id
         if user_id in _pending_broadcast:
             bcast_info = _pending_broadcast.pop(user_id)
             await handle_broadcast_message(client, message, bcast_info)
+            message.stop_propagation()  # prevent upload handler from firing
 
 
 async def handle_admin_text_action(client: Client, message: Message, action: str):
-    user_id = message.from_user.id
     text = message.text.strip()
 
     if action == "ban":
@@ -327,12 +299,8 @@ async def handle_admin_text_action(client: Client, message: Message, action: str
 
     elif action == "addchannel":
         try:
-            if text.startswith("@"):
-                ch_id = text
-                ch_username = text
-            else:
-                ch_id = text
-                ch_username = None
+            ch_id = text
+            ch_username = text if text.startswith("@") else None
             await db.add_force_join_channel(ch_id, ch_username)
             await message.reply_text(f"✅ Channel <code>{ch_id}</code> added to force join.", parse_mode=enums.ParseMode.HTML)
         except Exception as e:
@@ -340,7 +308,7 @@ async def handle_admin_text_action(client: Client, message: Message, action: str
 
     elif action == "removechannel":
         await db.remove_force_join_channel(text)
-        await message.reply_text(f"✅ Channel <code>{text}</code> removed from force join.", parse_mode=enums.ParseMode.HTML)
+        await message.reply_text(f"✅ Channel <code>{text}</code> removed.", parse_mode=enums.ParseMode.HTML)
 
     elif action == "deletefile":
         file_record = await db.get_file_by_code(text)
@@ -356,7 +324,7 @@ async def handle_admin_text_action(client: Client, message: Message, action: str
         await message.reply_text(
             f"✅ Text <b>{key}</b> updated successfully.",
             parse_mode=enums.ParseMode.HTML,
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Edit Texts", callback_data="admin_edittexts")]])
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("« Edit Texts", callback_data="admin_edittexts")]])
         )
 
 
@@ -392,7 +360,7 @@ async def _run_broadcast(client: Client, message: Message, target: str, delay: i
 
     for uid in user_ids:
         try:
-            await asyncio.sleep(0.05)  # ~20 msgs/sec, respects Telegram limits
+            await asyncio.sleep(0.05)
             if message.text:
                 await client.send_message(uid, message.text, parse_mode=enums.ParseMode.HTML)
             elif message.photo:
@@ -420,7 +388,7 @@ async def _run_broadcast(client: Client, message: Message, target: str, delay: i
 
     summary = (
         f"✅ <b>Broadcast Completed</b>\n\n"
-        f"👥 Total Users: <b>{len(user_ids)}</b>\n"
+        f"👥 Total: <b>{len(user_ids)}</b>\n"
         f"✅ Delivered: <b>{delivered}</b>\n"
         f"❌ Failed: <b>{failed}</b>\n"
         f"🚫 Blocked: <b>{blocked}</b>"

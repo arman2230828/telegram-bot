@@ -85,6 +85,15 @@ async def init_db():
             )
         """)
         await conn.execute("""
+            CREATE TABLE IF NOT EXISTS broadcast_queue (
+                id SERIAL PRIMARY KEY,
+                message TEXT NOT NULL,
+                target_group TEXT DEFAULT 'all',
+                status TEXT DEFAULT 'pending',
+                created_at TIMESTAMP DEFAULT NOW()
+            )
+        """)
+        await conn.execute("""
             CREATE INDEX IF NOT EXISTS idx_files_uploader ON files(uploader_id);
             CREATE INDEX IF NOT EXISTS idx_files_unique_code ON files(unique_code);
             CREATE INDEX IF NOT EXISTS idx_files_name ON files(file_name);
